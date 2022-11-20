@@ -162,7 +162,7 @@ abstract contract Checker is Context, ERC165, EIP712, IChecker, IERC721Receiver,
             return ProposalState.Active;
         }
 
-        if (_quorumReached(proposalId) && _voteSucceeded(proposalId)) {
+        if (_quorumReached(proposalId) && _voteFact(proposalId)) {
             return ProposalState.Succeeded;
         } else {
             return ProposalState.Defeated;
@@ -198,7 +198,8 @@ abstract contract Checker is Context, ERC165, EIP712, IChecker, IERC721Receiver,
     /**
      * @dev Is the proposal successful or not.
      */
-    function _voteSucceeded(uint256 proposalId) internal view virtual returns (bool);
+    function _voteFact(uint256 proposalId) internal view virtual returns (bool);
+    function _voteFake(uint256 proposalId) internal view virtual returns (bool);
 
     /**
      * @dev Get the voting weight of `account` at a specific `blockNumber`, for a vote as described by `params`.

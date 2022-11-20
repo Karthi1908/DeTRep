@@ -15,15 +15,15 @@ abstract contract CheckerCountingSimple is Checker {
      * @dev Supported vote types. Matches Governor Bravo ordering.
      */
     enum VoteType {
-        Against,
-        For,
-        Abstain
+        Fake,
+        Fact,
+        Sarcasm
     }
 
     struct ProposalVote {
-        uint256 againstVotes;
-        uint256 forVotes;
-        uint256 abstainVotes;
+        uint256 fakeVotes;
+        uint256 factVotes;
+        uint256 sarcasmVotes;
         mapping(address => bool) hasVoted;
     }
 
@@ -52,13 +52,13 @@ abstract contract CheckerCountingSimple is Checker {
         view
         virtual
         returns (
-            uint256 againstVotes,
-            uint256 forVotes,
-            uint256 abstainVotes
+            uint256 fakeVotes,
+            uint256 factVotes,
+            uint256 sarcasmVotes
         )
     {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
-        return (proposalVote.againstVotes, proposalVote.forVotes, proposalVote.abstainVotes);
+        return (proposalVote.fakeVotes, proposalVote.factVotes, proposalVote.sarcasmVotes);
     }
 
     /**
@@ -67,16 +67,22 @@ abstract contract CheckerCountingSimple is Checker {
     function _quorumReached(uint256 proposalId) internal view virtual override returns (bool) {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
 
-        return quorum(proposalSnapshot(proposalId)) <= proposalVote.forVotes + proposalVote.abstainVotes;
+        return quorum(proposalSnapshot(proposalId)) <= proposalVote.fakeVotes + proposalVote.factVotes + proposalVote.sarcasmVotes;
     }
 
     /**
      * @dev See {Governor-_voteSucceeded}. In this module, the forVotes must be strictly over the againstVotes.
      */
-    function _voteSucceeded(uint256 proposalId) internal view virtual override returns (bool) {
+    function _voteFact(uint256 proposalId) internal view virtual override returns (bool) {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
 
-        return proposalVote.forVotes > proposalVote.againstVotes;
+        return proposalVote.factVotes > proposalVote.fakeVotes;
+    }
+
+    function _voteFake(uint256 proposalId) internal view virtual override returns (bool) {
+        ProposalVote storage proposalVote = _proposalVotes[proposalId];
+
+        return proposalVote.factVotes > proposalVote.fakeVotes;
     }
 
     /**
@@ -94,12 +100,12 @@ abstract contract CheckerCountingSimple is Checker {
         require(!proposalVote.hasVoted[account], "GovernorVotingSimple: vote already cast");
         proposalVote.hasVoted[account] = true;
 
-        if (support == uint8(VoteType.Against)) {
-            proposalVote.againstVotes += weight;
-        } else if (support == uint8(VoteType.For)) {
-            proposalVote.forVotes += weight;
-        } else if (support == uint8(VoteType.Abstain)) {
-            proposalVote.abstainVotes += weight;
+        if (support == uint8(VoteType.Fake)) {
+            proposalVote.fakeVotes += weight;
+        } else if (support == uint8(VoteType.Fact)) {
+            proposalVote.factVotes += weight;
+        } else if (support == uint8(VoteType.Sarcasm)) {
+            proposalVote.sarcasmVotes += weight;
         } else {
             revert("GovernorVotingSimple: invalid value for enum VoteType");
         }
